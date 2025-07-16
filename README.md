@@ -19,5 +19,5 @@ The source code is mounted into the container, so code changes reflect immediate
 Do NOT commit your .env file to the repository!
 
 
-**If you encounter any issues, please contact the DevOps team.**
+**If you encounter any issues, please contact the DevOps team:**
 krystian@wlodek.net
