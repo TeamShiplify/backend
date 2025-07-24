@@ -1,0 +1,62 @@
+{% extends "admin/app_list.html" %}
+
+{% block app_list %}
+    {% if app_list %}
+        {% for app in app_list %}
+            {% if app.app_label == 'allegro_integration' %}
+                <div class="app-{{ app.app_label }} module">
+                    <table>
+                        <caption>
+                            <a href="{{ app.app_url }}" class="section" title="Modele w aplikacji {{ app.name }}">
+                                {{ app.name }}
+                            </a>
+                        </caption>
+
+                        <tr class="model-offercreate">
+                            <th scope="row">
+                                <a href="{% url 'allegro_integration:create_offer' %}">Wystaw nową ofertę</a>
+                            </th>
+                            <td>
+                                <a href="{% url 'allegro_integration:create_offer' %}" class="addlink">Wystaw</a>
+                            </td>
+                        </tr>
+
+                        {% for model in app.models %}
+                            <tr class="model-{{ model.object_name|lower }}">
+                                {% if model.perms.view or model.perms.change %}
+                                    <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                                {% else %}
+                                    <th scope="row">{{ model.name }}</th>
+                                {% endif %}
+
+                                {% if model.perms.add %}
+                                    <td><a href="{{ model.add_url }}" class="addlink">Dodaj</a></td>
+                                {% else %}
+                                    <td> </td>
+                                {% endif %}
+
+                                {% if model.perms.change %}
+                                    <td><a href="{{ model.admin_url }}" class="changelink">Zmień</a></td>
+                                {% else %}
+                                    <td> </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% else %}
+                <div class="app-{{ app.app_label }} module">
+                    <table>
+                    <caption>
+                        <a href="{{ app.app_url }}" class="section" title="Modele w aplikacji {{ app.name }}">
+                            {{ app.name }}
+                        </a>
+                    </caption>
+                    {% for model in app.models %}
+                    {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}

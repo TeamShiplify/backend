@@ -13,3 +13,6 @@ staticfiles
 *.egg-info
 dist
 build
+
+scripts/*
+migrations/*

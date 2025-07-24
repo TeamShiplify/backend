@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'allegro_integration',
     # Twoje aplikacje
 ]
 
@@ -37,7 +38,7 @@ ROOT_URLCONF = "shiplify.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {"context_processors": [
             "django.template.context_processors.debug",
@@ -61,12 +62,19 @@ DATABASES = {
     }
 }
 
+ALLEGRO_CLIENT_ID = os.getenv("ALLEGRO_CLIENT_ID")
+ALLEGRO_CLIENT_SECRET = os.getenv("ALLEGRO_CLIENT_SECRET")
+ALLEGRO_TOKEN_URL = os.getenv("ALLEGRO_TOKEN_URL")
+ALLEGRO_API_URL = os.getenv("ALLEGRO_API_URL")
+ALLEGRO_REDIRECT_URI = os.getenv("ALLEGRO_REDIRECT_URI")
+
 AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+APP_DIRS = True
 
 STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

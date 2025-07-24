@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if original.pk and original.allegro_profile.access_token %}
+    <li>
+        <a href="{% url 'allegro_integration:process_allegro_orders' original.pk %}" class="historylink">
+            {% trans 'Pobierz i zapisz zamówienia' %}
+        </a>
+    </li>
+    {% endif %}
+{% endblock %}

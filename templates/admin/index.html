@@ -1,0 +1,31 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+{# Najpierw dodajemy nasz własny boks #}
+<div id="content-main">
+    <div class="app-allegro_integration module">
+        <table>
+            <caption>
+                <a href="#" class="section" title="Szybkie Akcje">Szybkie Akcje Allegro</a>
+            </caption>
+            <tbody>
+                <tr class="model-offercreate">
+                    <th scope="row">
+                        <a href="{% url 'allegro_integration:create_offer' %}">Wystaw nową ofertę</a>
+                    </th>
+                    <td>
+                        <a href="{% url 'allegro_integration:create_offer' %}" class="addlink">
+                            {% trans 'Wystaw' %}
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# Następnie dołączamy oryginalną zawartość strony głównej admina #}
+{{ block.super }}
+
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <p class="errornote">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+            </p>
+        {% endif %}
+
+        <fieldset class="module aligned">
+            <h2>Krok 1: Metoda tworzenia</h2>
+            {{ form.creation_method.label_tag }} {{ form.creation_method }}
+            
+            <div class="form-row" id="ean_code_row" style="display: none;">
+                {{ form.ean_code.label_tag }} {{ form.ean_code }}
+                {% if form.ean_code.errors %}<div class="errornote">{{ form.ean_code.errors }}</div>{% endif %}
+            </div>
+            <div class="form-row" id="existing_offer_row" style="display: none;">
+                {{ form.existing_offer_id.label_tag }} {{ form.existing_offer_id }}
+                {% if form.existing_offer_id.errors %}<div class="errornote">{{ form.existing_offer_id.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Krok 2: Kategoria i tytuł</h2>
+            <div class="form-row">
+                {{ form.title.label_tag }} {{ form.title }}
+                {% if form.title.errors %}<div class="errornote">{{ form.title.errors }}</div>{% endif %}
+            </div>
+            <div class="form-row">
+                <label for="category-search-input">Wyszukaj kategorię:</label>
+                <input type="text" id="category-search-input">
+                <div id="category-results"></div>
+            </div>
+            <div class="form-row">
+                {{ form.category_path_display.label_tag }} {{ form.category_path_display }}
+                {{ form.category_id }}
+                {% if form.category_id.errors %}<div class="errornote">{{ form.category_id.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+        
+        <fieldset class="module aligned" id="parameters-fieldset" style="display: none;">
+            <h2>Krok 3: Parametry oferty</h2>
+            <div id="dynamic-parameters-container">
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Krok 4: Opis i zdjęcia</h2>
+            <div class="form-row">
+                {{ form.description_html.label_tag }} {{ form.description_html }}
+                {% if form.description_html.errors %}<div class="errornote">{{ form.description_html.errors }}</div>{% endif %}
+            </div>
+            <div class="form-row">
+                {{ form.images_urls.label_tag }} {{ form.images_urls }}
+                {% if form.images_urls.errors %}<div class="errornote">{{ form.images_urls.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        <fieldset class="module aligned">
+            <h2>Krok 5: Cena i format</h2>
+            <div class="form-row">
+                {{ form.selling_mode.label_tag }} {{ form.selling_mode }}
+            </div>
+            <div class="form-row" id="price_buy_now_row">
+                {{ form.price_buy_now.label_tag }} {{ form.price_buy_now }}
+                {% if form.price_buy_now.errors %}<div class="errornote">{{ form.price_buy_now.errors }}</div>{% endif %}
+            </div>
+            <div class="form-row" id="price_auction_start_row" style="display: none;">
+                {{ form.price_auction_start.label_tag }} {{ form.price_auction_start }}
+                {% if form.price_auction_start.errors %}<div class="errornote">{{ form.price_auction_start.errors }}</div>{% endif %}
+            </div>
+             <div class="form-row">
+                {{ form.stock.label_tag }} {{ form.stock }}
+                {% if form.stock.errors %}<div class="errornote">{{ form.stock.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+        
+        <fieldset class="module aligned">
+            <h2>Krok 6: Dostawa i czas trwania</h2>
+             <div class="form-row">
+                {{ form.publication_duration.label_tag }} {{ form.publication_duration }}
+                {% if form.publication_duration.errors %}<div class="errornote">{{ form.publication_duration.errors }}</div>{% endif %}
+            </div>
+            <div class="form-row">
+                {{ form.shipping_rates_id.label_tag }} {{ form.shipping_rates_id }}
+                {% if form.shipping_rates_id.errors %}<div class="errornote">{{ form.shipping_rates_id.errors }}</div>{% endif %}
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Wystaw ofertę" class="default">
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySearchUrl = "{% url 'allegro_integration:api_search_category' %}";
+    const categoryParamsBaseUrl = "{% url 'allegro_integration:api_get_category_parameters' 'CATEGORY_ID' %}";
+
+    const creationMethodRadios = document.querySelectorAll('input[name="creation_method"]');
+    const sellingModeRadios = document.querySelectorAll('input[name="selling_mode"]');
+    const categorySearchInput = document.getElementById('category-search-input');
+    const categoryResultsDiv = document.getElementById('category-results');
+    const categoryIdInput = document.getElementById('id_category_id');
+    const categoryPathDisplay = document.getElementById('id_category_path_display');
+    const paramsContainer = document.getElementById('dynamic-parameters-container');
+    const paramsFieldset = document.getElementById('parameters-fieldset');
+
+
+    function toggleVisibility(selector, show) {
+        document.querySelector(selector).style.display = show ? '' : 'none';
+    }
+
+    function handleCreationMethodChange() {
+        const selected = document.querySelector('input[name="creation_method"]:checked').value;
+        toggleVisibility('#ean_code_row', selected === 'FROM_EAN');
+        toggleVisibility('#existing_offer_row', selected === 'FROM_EXISTING');
+    }
+
+    function handleSellingModeChange() {
+        const selected = document.querySelector('input[name="selling_mode"]:checked').value;
+        toggleVisibility('#price_buy_now_row', selected === 'BUY_NOW');
+        toggleVisibility('#price_auction_start_row', selected === 'AUCTION');
+    }
+
+    handleCreationMethodChange();
+    handleSellingModeChange();
+    creationMethodRadios.forEach(radio => radio.addEventListener('change', handleCreationMethodChange));
+    sellingModeRadios.forEach(radio => radio.addEventListener('change', handleSellingModeChange));
+
+    let searchTimeout;
+    categorySearchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = categorySearchInput.value;
+            if (query.length < 3) {
+                categoryResultsDiv.innerHTML = '';
+                return;
+            }
+            fetch(`${categorySearchUrl}?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    categoryResultsDiv.innerHTML = '';
+                    if (data.categories) {
+                        data.categories.forEach(cat => {
+                            const div = document.createElement('div');
+                            div.textContent = cat.name;
+                            div.style.cursor = 'pointer';
+                            div.style.padding = '5px';
+                            div.addEventListener('click', () => selectCategory(cat));
+                            categoryResultsDiv.appendChild(div);
+                        });
+                    }
+                });
+        }, 500);
+    });
+
+    function selectCategory(category) {
+        categoryIdInput.value = category.id;
+        categoryPathDisplay.value = category.name;
+        categoryResultsDiv.innerHTML = '';
+        categorySearchInput.value = '';
+        fetchParameters(category.id);
+    }
+
+    function fetchParameters(categoryId) {
+        const url = categoryParamsBaseUrl.replace('CATEGORY_ID', categoryId);
+        paramsContainer.innerHTML = 'Ładowanie parametrów...';
+        paramsFieldset.style.display = '';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                paramsContainer.innerHTML = '';
+                if (data.parameters) {
+                    data.parameters.forEach(param => {
+                        const row = document.createElement('div');
+                        row.className = 'form-row';
+                        const label = document.createElement('label');
+                        label.textContent = param.name + (param.required ? ' *' : '');
+                        row.appendChild(label);
+
+                        const fieldName = `param_${param.id}`;
+
+                        if (param.type === 'dictionary' && param.dictionary) {
+                            const select = document.createElement('select');
+                            select.name = fieldName;
+                            if (!param.required) {
+                                select.add(new Option('---', ''));
+                            }
+                            param.dictionary.forEach(opt => {
+                                const optionValue = `${opt.id}:${opt.value}`;
+                                select.add(new Option(opt.value, optionValue));
+                            });
+                            row.appendChild(select);
+                        } else {
+                            const input = document.createElement('input');
+                            input.type = param.type === 'float' || param.type === 'integer' ? 'number' : 'text';
+                            input.name = fieldName;
+                            if (param.restrictions) {
+                                if (param.restrictions.minLength) input.minLength = param.restrictions.minLength;
+                                if (param.restrictions.maxLength) input.maxLength = param.restrictions.maxLength;
+                            }
+                            row.appendChild(input);
+                        }
+                        paramsContainer.appendChild(row);
+                    });
+                }
+            });
+    }
+});
+</script>
+
+{% endblock %}
